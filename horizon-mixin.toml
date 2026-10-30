@@ -1,0 +1,111 @@
+# Rescale, as a Horizon native mod: draw the level at a stretched aspect
+# ratio (16:9, 16:10, 4:3, 5:4 or a custom one), the way the Fabric mod
+# Rescale does on vanilla Minecraft. The hand and the HUD keep their own
+# projection, as they do in the mod.
+#
+# The Nightly this was built and tested on. The projection hook below is a
+# raw target (the game's own `View::screen`), not a named hook point, so the
+# build has to know which commit to apply it to. The launcher keeps every
+# Nightly's source, so this still builds after the Nightly is replaced.
+[mod]
+id = "rescale"
+version = "0.1.0"
+priority = 100
+
+[compatibility]
+horizon_revision = "1da354b67a509812c4141b67de2affd6de65c342"
+
+# The ratio, shared by both crates: the client's hooks set it, the
+# projection hook reads it.
+[[module]]
+id = "render_state"
+file = "crates/horizon-client-render/src/lib.rs"
+name = "rescale"
+source = "render_state.rs"
+visibility = "pub"
+
+# Settings, the key and the Options > Mods page.
+[[module]]
+id = "client_state"
+file = "crates/horizon-client/src/game.rs"
+name = "rescale_client"
+source = "client_state.rs"
+
+# The level's projection: `View::screen` is the one place a flat screen's
+# view is built, and `world_projection` takes the very aspect vanilla's
+# `m00 = 1 / (tan(fov / 2) * aspect)` is built from. Handing it Rescale's
+# ratio stretches the level exactly as the Fabric mod does, while the hand
+# (`camera::hand_projection`) and the HUD keep their own projection.
+# RETURN is impossible here: `screen` returns `Self`, and RETURN needs a
+# concrete result type, so the aspect parameter's LOAD is rewritten instead.
+[[injection]]
+id = "projection"
+kind = "MODIFY_VARIABLE"
+target = "horizon_client_render::gfx::view::View::screen"
+variable = { name = "aspect", ordinal = 0, at = "LOAD", parameter = true }
+require = 2
+ordinal = 0
+helper = "projection.rs"
+bindings = [{ name = "aspect", ty = "f32", value = "$value" }]
+
+[[injection]]
+id = "frame"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_frame"
+helper = "frame.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "elapsed", ty = "std::time::Duration", value = "elapsed" },
+]
+
+[[injection]]
+id = "key"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_key"
+helper = "key.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "key", ty = "&str", value = "key" },
+  { name = "pressed", ty = "bool", value = "pressed" },
+]
+
+[[injection]]
+id = "list"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_mods"
+helper = "list.rs"
+bindings = [
+  { name = "mods", ty = "&mut Vec<crate::game::native_hooks::NativeMod>", value = "&mut *mods" },
+]
+
+[[injection]]
+id = "settings"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings"
+helper = "settings.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "buttons", ty = "&mut Vec<String>", value = "&mut *buttons" },
+]
+
+[[injection]]
+id = "click"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings_click"
+helper = "click.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "button", ty = "usize", value = "button" },
+]
+
+[[injection]]
+id = "hud"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_hud"
+helper = "hud.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "batch", ty = "&mut horizon_client::hud::HudBatch", value = "&mut *batch" },
+]

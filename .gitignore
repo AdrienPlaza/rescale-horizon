@@ -1,0 +1,3 @@
+# The packaged build is committed on purpose (dist/), so players can also take
+# the .hnmod directly. Nothing else is generated here.
+*.zip
