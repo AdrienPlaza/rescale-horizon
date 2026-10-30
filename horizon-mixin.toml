@@ -1,5 +1,5 @@
 # Rescale, as a Horizon native mod: draw the level at a stretched aspect
-# ratio (16:9, 16:10, 4:3, 5:4 or a custom one), the way the Fabric mod
+# ratio (4:3, 5:4, 16:10, 16:9 or a custom one), the way the Fabric mod
 # Rescale does on vanilla Minecraft. The hand and the HUD keep their own
 # projection, as they do in the mod.
 #
@@ -9,7 +9,7 @@
 # Nightly's source, so this still builds after the Nightly is replaced.
 [mod]
 id = "rescale"
-version = "0.1.0"
+version = "0.2.0"
 priority = 100
 
 [compatibility]

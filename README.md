@@ -1,7 +1,7 @@
 # Rescale — mod natif pour Horizon
 
 Résolution étirée (« stretched resolution ») pour [Horizon](https://playhorizon.dev) :
-le monde est dessiné dans un ratio choisi (16:9, 16:10, 4:3, 5:4 ou un ratio
+le monde est dessiné dans un ratio choisi (4:3, 5:4, 16:10, 16:9 ou un ratio
 personnalisé) pendant que la fenêtre garde le sien. L'image est donc étirée
 horizontalement, exactement comme le fait le mod Fabric
 [Rescale](https://modrinth.com/mod/rescale) de TCD1234 sur Minecraft Java.
@@ -35,16 +35,41 @@ Le mod se construit sur le Nightly `nightly-2026-10-30` (commit
 `1da354b`), celui sur lequel il a été testé : le launcher garde la source de
 chaque Nightly, donc ça fonctionne même si ton launcher est plus récent.
 
+## Si F6 ne fait rien
+
+Dans l'ordre, et c'est presque toujours l'un des trois premiers :
+
+1. **Tu joues la bonne instance.** Les mods natifs ne tournent que dans
+   l'instance **Native mods** (en haut à gauche du launcher). L'instance
+   normale ne les a pas.
+2. **Le mod est activé.** En jeu, **Options > Mods** : la ligne « Rescale
+   0.2.0 » doit être là, avec son interrupteur sur ON. Si elle n'est pas là,
+   c'est que le build ne contient pas le mod.
+3. **Tu as rebuild après l'installation.** Installer ne suffit pas :
+   **Settings > Native mods > Build** (le bouton rouge « I trust these mods:
+   build »). Le build crée une version `native-…` ; c'est elle que lance
+   l'instance.
+4. **Tu es à jour.** `horizon-launcher mods update-github rescale` puis
+   **Build** à nouveau.
+5. **Le repère visuel** : à l'arrivée dans un monde, une ligne dans le chat
+   dit « Rescale 0.2.0: F6 changes the ratio ». Si elle n'apparaît pas, le
+   mod n'est pas dans le build ; si elle apparaît et que F6 ne fait rien,
+   regarde la touche liée dans **Options > Commandes**.
+
 ## Réglages
 
 - **Touche** : `F6` par défaut, rebindable dans **Options > Commandes**
   (chercher « Rescale »). Elle fait défiler
-  `16:9 → 16:10 → 4:3 → 5:4 → custom → off`.
+  `4:3 → 5:4 → 16:10 → 16:9 → custom → off`.
+  Le premier appui donne donc **4:3**, un changement bien visible : c'est
+  volontaire, un premier appui sur 16:9 ne change rien sur un écran 16:9.
 - **Options > Mods > Rescale** : le mode courant, les quatre préréglages, un
   ratio personnalisé (`±0.05` par clic) et « off ».
 - Les réglages sont dans
   `%APPDATA%\horizon\horizon-mods\.horizon-mod-data\rescale\` (`mode`, `custom`).
-- Le ratio s'affiche en haut à gauche pendant 1,5 s après un changement.
+- Le ratio s'affiche en haut à gauche pendant 2,5 s après un changement.
+- À l'arrivée dans un monde, une ligne dans le chat rappelle que le mod est
+  chargé : si tu ne la vois pas, le build ne contient pas le mod (voir plus bas).
 
 ## Comment c'est fait
 

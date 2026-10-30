@@ -9,6 +9,15 @@ fn rescale_frame(game: &mut crate::game::Game<'_>, elapsed: std::time::Duration)
         rescale::off();
         return;
     }
+    // Once a session, in the world: a line in chat saying the mod is there.
+    // A player whose build does not contain it sees nothing at all, and this
+    // is the difference between "the mod is missing" and "the key is wrong".
+    if game.native_playing() && rescale::announce_once() {
+        game.native_chat(&format!(
+            "Rescale {}: F6 changes the ratio (Options > Mods > Rescale)",
+            rescale::VERSION
+        ));
+    }
     let settings = rescale::settings(|key| game.native_setting(rescale::ID, key));
     rescale::draw(settings);
 }

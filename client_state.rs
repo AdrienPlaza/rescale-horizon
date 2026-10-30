@@ -5,26 +5,32 @@
 // rescale/mode`, `custom`), read once and then held. The ratio itself lives
 // in horizon-client-render's `rescale` module, which the projection hook
 // reads; every change here pushes it there.
+//
+// The cycle starts at 4:3, not at 16:9: on the 16:9 window almost everyone
+// has, drawing at 16:9 is the window's own ratio, so a first press that
+// landed there changed nothing on screen and looked like a mod that does not
+// work. 4:3 is the ratio people install this for, and it always shows.
 use std::cell::RefCell;
 
 use horizon_client_render::rescale::{MAX_RATIO, MIN_RATIO, set_target};
 
 /// The mod's id: its settings folder and its key's line.
 pub const ID: &str = "rescale";
-pub const VERSION: &str = "0.1.0";
-pub const DESCRIPTION: &str = "Stretched resolution: draw the world at 16:9, 16:10, 4:3, 5:4 \
+pub const VERSION: &str = "0.2.0";
+pub const DESCRIPTION: &str = "Stretched resolution: draw the world at 4:3, 5:4, 16:10, 16:9 \
 or your own ratio, while the hand and the HUD stay normal. A native port of the Rescale mod \
 by TCD1234.";
 /// The key's name, and its default.
 pub const KEY: &str = "cycle";
 pub const DEFAULT_KEY: &str = "key.keyboard.f6";
 
-/// The ratios the key cycles through: (label, width / height).
+/// The ratios the key cycles through: (label, width / height). 4:3 first, so
+/// the first press from off always changes what is on screen.
 pub const PRESETS: [(&str, f32); 4] = [
-    ("16:9", 16.0 / 9.0),
-    ("16:10", 16.0 / 10.0),
     ("4:3", 4.0 / 3.0),
     ("5:4", 5.0 / 4.0),
+    ("16:10", 16.0 / 10.0),
+    ("16:9", 16.0 / 9.0),
 ];
 
 /// The window's own, and the custom ratio's, mode numbers.
@@ -32,7 +38,7 @@ const OFF: u8 = 0;
 const CUSTOM: u8 = 5;
 /// A custom step, and how long the ratio stays on the HUD after a change.
 const CUSTOM_STEP: f32 = 0.05;
-const TOAST_SECONDS: f32 = 1.5;
+const TOAST_SECONDS: f32 = 2.5;
 /// How long a key press is ignored after the same key already fired: input
 /// paths that report one press twice count once, and a human press is never
 /// that close to the previous one.
@@ -86,7 +92,7 @@ impl Settings {
         }
     }
 
-    /// The next mode the key cycles to: 16:9, 16:10, 4:3, 5:4, custom, off.
+    /// The next mode the key cycles to: 4:3, 5:4, 16:10, 16:9, custom, off.
     pub fn next(&self) -> Self {
         let mode = if self.mode >= CUSTOM {
             OFF
@@ -148,6 +154,8 @@ struct State {
     toast: Option<(f32, String)>,
     /// The last key press that fired, and when.
     last_key: Option<(f32, String)>,
+    /// The one-time "Rescale is loaded" line was shown this session.
+    announced: bool,
 }
 
 thread_local! {
@@ -206,6 +214,20 @@ pub fn press_allowed(key: &str) -> bool {
         }
         let clock = state.clock;
         state.last_key = Some((clock, key.to_owned()));
+        true
+    })
+}
+
+/// Whether this session still has to say that the mod is loaded. True once:
+/// the frame hook then writes a line in chat, which is the quickest way for
+/// a player to see that the build really contains the mod.
+pub fn announce_once() -> bool {
+    STATE.with(|cell| {
+        let mut state = cell.borrow_mut();
+        if state.announced {
+            return false;
+        }
+        state.announced = true;
         true
     })
 }
